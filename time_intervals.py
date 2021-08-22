@@ -40,8 +40,8 @@ def seg_long_calls(start, end, clip_length, neg = False):
     return segments
 
 
-def get_duration(interval):
-    return interval[0][1] - interval[0][0]
+def get_duration(interv):
+    return interv[0][1] - interv[0][0]
 
 
 # require sorted overlap
