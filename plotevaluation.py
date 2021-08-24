@@ -7,6 +7,9 @@ from sklearn.metrics import multilabel_confusion_matrix
 import seaborn as sns
 
 
+figurepath = './figures/'
+
+
 target_names = ['ashy tailorbird', 'banded bay cuckoo', 'black-capped babbler', 'black-headed bulbul', \
                 'black-naped monarch', 'blue-eared barbet', 'bold-striped tit-babbler', 'bornean gibbon', \
                 'brown fulvetta', 'buff-vented bulbul', 'bushy-crested hornbill', \
@@ -17,8 +20,7 @@ target_names = ['ashy tailorbird', 'banded bay cuckoo', 'black-capped babbler', 
                 'slender-billed crow', 'sooty-capped babbler', 'spectacled bulbul', 'yellow-vented bulbul']
 
 
-
-def plot_training_metrics(modelname, history):
+def plot_training_metrics(modelname, histories, num_trial):
     train_metrics = ['loss', 'accuracy', 'f1_m', 'precision_m', 'recall_m']
     val_metrics = ['val_loss', 'val_accuracy', 'val_f1_m', 'val_precision_m', 'val_recall_m']
 
@@ -27,21 +29,29 @@ def plot_training_metrics(modelname, history):
     fig.set_size_inches(16, 10)
     for t, v in zip(train_metrics, val_metrics):
         plt.subplot(2, 3, index)
-        plt.plot(history.history[t])
-        plt.plot(history.history[v])
+        totalt = np.zeros(shape=np.max([len(x.history[t]) for x in histories], 0))
+        totalv = np.zeros(shape=np.max([len(x.history[v]) for x in histories], 0))
+        for i in range(num_trial):
+            totalt[0:len(histories[i].history[t])] += np.array(histories[i].history[t])
+            totalv[0:len(histories[i].history[v])] += np.array(histories[i].history[v])
+        plt.plot(totalt/num_trial)
+        plt.plot(totalv/num_trial)
+        if v == 'val_f1_m':
+            val_f1 = totalv/num_trial
         plt.title('model ' + t)
         plt.ylabel(t)
         plt.xlabel('epoch')
         plt.legend(['train', 'validation'], loc='upper left')
         index += 1
-    plt.savefig(modelname + '.png')
+    plt.savefig(figurepath+modelname + '.png')
+    return val_f1
 
 
 
 def classification_result(modelname, test_y, bool_predict):
     report = classification_report(test_y, bool_predict, target_names=target_names)
     print("Classification report: \n", report)
-    f = open(modelname+'report.txt', "a")
+    f = open(figurepath+modelname+'report.txt', "a")
     f.write(report)
     f.close()
     print("F1 micro averaging:", (f1_score(test_y, bool_predict, average='micro')))
@@ -65,5 +75,16 @@ def plot_confusion_matrix(modelname, test_y, bool_predict):
         plt.title(target_names[i], fontsize=13)
 
     fig.tight_layout(h_pad=1, w_pad=0.5)
-    plt.savefig(modelname+'cm.png')
+    plt.savefig(figurepath+modelname+'cm.png')
 
+
+def plot_f1(modelname, all_val_f1):
+    fig, axs = plt.subplots()
+    fig.set_size_inches(12, 8)
+    for m in all_val_f1:
+        plt.plot(m)
+    plt.title('Macro F1 on Validation set')
+    plt.ylabel("F1")
+    plt.xlabel('epoch')
+    plt.legend(modelname, loc='upper left')
+    plt.savefig(figurepath + 'F1.png')

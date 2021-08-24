@@ -2,7 +2,6 @@ import tensorflow as tf
 import os
 import collections
 
-
 AUTO = tf.data.AUTOTUNE
 BATCH_SIZE = 64
 
@@ -83,13 +82,15 @@ def get_batched_dataset(filenames):
     dataset = dataset.cache()  # This dataset fits in RAM
     dataset = dataset.repeat()
     dataset = dataset.shuffle(2048)
-    dataset = dataset.batch(BATCH_SIZE, drop_remainder=True)
-    dataset = dataset.prefetch(AUTO)  #
+    dataset = dataset.batch(len(filenames), drop_remainder=True)
+    dataset = dataset.prefetch(AUTO) #
 
     return dataset
 
 def get_training_dataset(path_list_dict):
-    return get_batched_dataset(path_list_dict['train'])
+    dataset = get_batched_dataset(path_list_dict['train'])
+    x_train, y_train = next(iter(dataset))
+    return x_train, y_train
 
 def get_validation_dataset(path_list_dict):
     return get_batched_dataset(path_list_dict['devel'])
@@ -127,22 +128,18 @@ def read_tfrecord(example_proto):
     return logmel_spectrogram, label
     # return continuous, logmel_spectrogram, mfcc, segid, single, support, waveform, label
 
+
 def get_test_dataset(path_list_dict):
     dataset = (
         tf.data.TFRecordDataset(path_list_dict['test'], num_parallel_reads=AUTO)
         .map(read_tfrecord, num_parallel_calls=AUTO)
+        .batch(len(path_list_dict['test']), drop_remainder=True)
     )
     return dataset
 
 
 def get_test_ready(path_list_dict):
     testdata = get_test_dataset(path_list_dict)
-    test_x = tf.zeros([0, 500, 128, 1])
-    test_y = tf.zeros([0, 30])
-
-    for spec, lbl in testdata:
-        test_x = tf.concat([test_x, tf.expand_dims(spec, 0)], 0)
-        test_y = tf.concat([test_y, tf.expand_dims(lbl, 0)], 0)
-
+    test_x, test_y = next(iter(testdata))
     return test_x, test_y
 
