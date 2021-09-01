@@ -1,6 +1,6 @@
 # Animal Sound Classification and Retrieval
 
-This project contains a TensorFlow input pipeline that extract multiple acoustic features from an acoustic dataset provided by University of Kent.
+This project contains a TensorFlow input pipeline that extract multiple features from an acoustic dataset provided by University of Kent.
 The pipeline proceses annotated audios into 5-second clips, extract features, logmel spectrograms, MFCCs and the raw wavegram, perform file-dependent partitioning for each clip, and serialise all the information into binary tfrecords.
 It requires code in the common folder provided by Georgios Rizos
 Run preprocess.py to produce the tfrecords for a multi-label classification task.
