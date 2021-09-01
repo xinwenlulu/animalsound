@@ -81,7 +81,7 @@ def addCNNlayers(model, filters, denselayers, activations, RNNlayers=None):
         model.add(Conv2D(filters[i], kernel_size=(3, 3), padding='same', activation=activations[0]))
         model.add(MaxPooling2D(pool_size=(2, 2)))
     if RNNlayers is not None:
-        model.add(Reshape((992, 128)))
+        model.add(Reshape((62, 2048)))
         for i in range(len(RNNlayers)):
             model.add(GRU(RNNlayers[i], return_sequences=True))
         model.add(GlobalAveragePooling1D())

@@ -7,9 +7,9 @@ import numpy as np
 
 TFRECORDS_FOLDER = "./tfrecords"
 learning_rate = 0.01
-epochs = 1
+epochs = 100
 patience = 50
-num_trials = 1
+num_trials = 3
 modelname = 'CRNNplayha'
 augmentation = True
 timemask = 24
