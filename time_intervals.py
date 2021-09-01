@@ -114,8 +114,6 @@ def rest(li):
 def correct_order(intv1, intv2):
     s1 = intv1[0][0]
     s2 = intv2[0][0]
-    e1 = intv1[0][1]
-    e2 = intv2[0][1]
     if s1 > s2:
         return False
     return True
@@ -146,6 +144,58 @@ def notinrange(overlap, thiscall):
         if thiscall in o or o in thiscall:
             return False
     return True
+
+
+def find_overlaps(file, start, end, y_labels, filenegative):
+    durationdic = {}
+    labelsdic = {}
+    totaldic = {}
+    # calculate the overlap for each file
+    for x in np.unique(file):
+        val = []
+        y = []
+        length = 0
+        for fi, s, e, cls in zip(file, start, end, y_labels):
+            if fi == x and cls != 'nothing':
+                i = interval([s, e])
+                length += get_duration(i)
+                val.append(i)
+                y.append(cls)
+        if x not in filenegative:
+            durationdic[x] = val
+            labelsdic[x] = y
+            totaldic[x] = length
+
+    # get the overlaps
+    overlap = {}
+    overlapped_duration = {}
+    overlapcls = {}
+    for f in np.unique(file):
+        if f not in filenegative:
+            x = durationdic[f]
+            o = []
+            sth = interval()
+            clss = labelsdic[f]
+            oc = []
+            for i in range(len(x) - 1):
+                cls = clss[i + 1]
+                sth = sth | x[i]
+                result = x[i + 1] & sth
+                if result != interval():
+                    o.append(result)
+                    oc.append(cls)
+            overlap[f] = o
+            overlapcls[f] = oc
+            overlapped = 0
+
+            ol = merge_overlaps(sort_overlap(clean_overlap(o)))
+            for iv in ol:
+                overlapped += get_duration(iv)
+            if overlapped > 45:
+                overlapped = 45
+            overlapped_duration[f] = overlapped
+
+    return overlap, overlapcls, overlapped_duration, totaldic
 
 
 def find_nonoverlapping_interval(overlap, thiscall, minimum):

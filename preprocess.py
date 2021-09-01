@@ -15,5 +15,5 @@ data_file = '../Species_Record_Sheet_SMitchell.xlsx'
 
 
 over3flist, sorted_species, file, start, end, y_labels = datawrapup(data_file, threshold=threshold, verbose=verbose)
-ann, nann = make_ann(clip_length, over3flist, file, start, end, y_labels, move_nontarget=True, random_generator=rg)
+ann, nann = make_ann(clip_length, over3flist, file, start, end, y_labels, move_nontarget=True, random_generator=rg, verbose=verbose)
 make_tfrecords(ann, nann, clip_Folder, over3flist, sorted_species, rg, verbose=verbose)

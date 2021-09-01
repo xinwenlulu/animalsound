@@ -5,7 +5,7 @@ import common.augmentation.specaugment as specaugment
 
 class DataGenerator(tf.keras.utils.Sequence):
 
-    def __init__(self, x_train, y_train, batch_size=64, timemask = 24, shuffle=True):
+    def __init__(self, x_train, y_train, batch_size=64, timemask = 24, shuffle=True, focal_loss=False):
         self.batch_size = batch_size
         self.x = x_train
         self.y = y_train
@@ -13,6 +13,7 @@ class DataGenerator(tf.keras.utils.Sequence):
         self.shuffle = shuffle
         self.timemask = timemask
         self.on_epoch_end()
+        self.focal_loss = focal_loss
 
     def __len__(self):
         return self.y.shape[0] // self.batch_size
@@ -31,7 +32,10 @@ class DataGenerator(tf.keras.utils.Sequence):
 
     def __get_data(self, batch):
         X = np.empty((self.batch_size,  500, 128, 1), dtype=np.float32)
-        y = np.empty((self.batch_size, 30), dtype=np.float32)
+        if self.focal_loss:
+            y = np.empty((self.batch_size, 1, 30), dtype=np.float32)
+        else:
+            y = np.empty((self.batch_size, 30), dtype=np.float32)
 
         for i, idx in enumerate(batch):
             original = tf.transpose(self.x[idx, ])
@@ -39,7 +43,7 @@ class DataGenerator(tf.keras.utils.Sequence):
             _ = sa.time_mask()
             specaugX = sa.freq_mask()
             X[i, ] = tf.transpose(specaugX)
-            y[i] = self.y[idx, ]
+            y[i, ] = self.y[idx, ]
 
         return X, y
 

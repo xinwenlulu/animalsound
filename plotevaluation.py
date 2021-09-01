@@ -20,7 +20,7 @@ target_names = ['ashy tailorbird', 'banded bay cuckoo', 'black-capped babbler', 
                 'slender-billed crow', 'sooty-capped babbler', 'spectacled bulbul', 'yellow-vented bulbul']
 
 
-def plot_training_metrics(modelname, histories, num_trial):
+def plot_training_metrics(modelname, histories, num_trial=None):
     train_metrics = ['loss', 'accuracy', 'f1_m', 'precision_m', 'recall_m']
     val_metrics = ['val_loss', 'val_accuracy', 'val_f1_m', 'val_precision_m', 'val_recall_m']
 
@@ -29,21 +29,27 @@ def plot_training_metrics(modelname, histories, num_trial):
     fig.set_size_inches(16, 10)
     for t, v in zip(train_metrics, val_metrics):
         plt.subplot(2, 3, index)
-        totalt = np.zeros(shape=np.max([len(x.history[t]) for x in histories], 0))
-        totalv = np.zeros(shape=np.max([len(x.history[v]) for x in histories], 0))
-        for i in range(num_trial):
-            totalt[0:len(histories[i].history[t])] += np.array(histories[i].history[t])
-            totalv[0:len(histories[i].history[v])] += np.array(histories[i].history[v])
-        plt.plot(totalt/num_trial)
-        plt.plot(totalv/num_trial)
-        if v == 'val_f1_m':
-            val_f1 = totalv/num_trial
+        if num_trial is not None:
+            totalt = np.zeros(shape=np.max([len(x.history[t]) for x in histories], 0))
+            totalv = np.zeros(shape=np.max([len(x.history[v]) for x in histories], 0))
+            for i in range(num_trial):
+                totalt[0:len(histories[i].history[t])] += np.array(histories[i].history[t])
+                totalv[0:len(histories[i].history[v])] += np.array(histories[i].history[v])
+            plt.plot(totalt/num_trial)
+            plt.plot(totalv/num_trial)
+            if v == 'val_f1_m':
+                val_f1 = totalv/num_trial
+        else:
+            plt.plot(histories.history[t])
+            plt.plot(histories.history[v])
         plt.title('model ' + t)
         plt.ylabel(t)
         plt.xlabel('epoch')
         plt.legend(['train', 'validation'], loc='upper left')
         index += 1
     plt.savefig(figurepath+modelname + '.png')
+    if num_trial is None:
+        val_f1 = histories.history['val_f1_m']
     return val_f1
 
 

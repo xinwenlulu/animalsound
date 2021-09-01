@@ -71,13 +71,16 @@ def get_dataset_info(tfrecords_folder):
 
 #This part was adapted from https://androidkt.com/feed-tfrecord-to-keras/
 ##############################################################################################
-def get_batched_dataset(filenames):
+def get_batched_dataset(filenames, focal_loss=False):
     option_no_order = tf.data.Options()
     option_no_order.experimental_deterministic = False
     dataset = tf.data.Dataset.list_files(filenames)
     dataset = dataset.with_options(option_no_order)
     dataset = dataset.interleave(tf.data.TFRecordDataset, cycle_length=16, num_parallel_calls=AUTO)
-    dataset = dataset.map(read_tfrecord, num_parallel_calls=AUTO)
+    if focal_loss:
+        dataset = dataset.map(read_tfrecord_focal_loss, num_parallel_calls=AUTO)
+    else:
+        dataset = dataset.map(read_tfrecord, num_parallel_calls=AUTO)
 
     dataset = dataset.cache()  # This dataset fits in RAM
     dataset = dataset.repeat()
@@ -87,14 +90,42 @@ def get_batched_dataset(filenames):
 
     return dataset
 
-def get_training_dataset(path_list_dict):
-    dataset = get_batched_dataset(path_list_dict['train'])
+def get_training_dataset(path_list_dict, focal_loss=False):
+    dataset = get_batched_dataset(path_list_dict['train'], focal_loss=focal_loss)
     x_train, y_train = next(iter(dataset))
     return x_train, y_train
 
-def get_validation_dataset(path_list_dict):
-    return get_batched_dataset(path_list_dict['devel'])
+def get_validation_dataset(path_list_dict, focal_loss=False):
+    return get_batched_dataset(path_list_dict['devel'], focal_loss=focal_loss)
 ###############################################################################################
+
+def read_tfrecord_focal_loss(example_proto):
+    features = {
+        "continuous": tf.io.FixedLenFeature([], tf.string),
+        "logmel_spectrogram": tf.io.FixedLenFeature([], tf.string),
+        'mfcc': tf.io.FixedLenFeature([], tf.string),
+        'segment_id': tf.io.FixedLenFeature([], tf.int64),
+        'single': tf.io.FixedLenFeature([], tf.string),
+        'support': tf.io.FixedLenFeature([], tf.string),
+        'waveform': tf.io.FixedLenFeature([], tf.string),
+        'label': tf.io.FixedLenFeature([], tf.string),
+    }
+
+    example = tf.io.parse_single_example(example_proto, features)
+
+    continuous = tf.io.decode_raw(example['continuous'], tf.float32)
+    logmel_spectrogram = tf.io.decode_raw(example['logmel_spectrogram'], tf.float32)
+    logmel_spectrogram = tf.expand_dims(tf.reshape(logmel_spectrogram, [500, 128]), -1)
+    mfcc = tf.io.decode_raw(example['mfcc'], tf.float32)
+    mfcc = tf.reshape(mfcc, [500, 80])
+    segid = example['segment_id']
+    single = tf.io.decode_raw(example['single'], tf.float32)
+    support = tf.io.decode_raw(example['support'], tf.float32)
+    waveform = tf.io.decode_raw(example['waveform'], tf.float32)
+    label = tf.io.decode_raw(example['label'], tf.float32)
+    label = tf.expand_dims(label, 0)
+
+    return logmel_spectrogram, label
 
 
 def read_tfrecord(example_proto):
@@ -129,17 +160,24 @@ def read_tfrecord(example_proto):
     # return continuous, logmel_spectrogram, mfcc, segid, single, support, waveform, label
 
 
-def get_test_dataset(path_list_dict):
-    dataset = (
-        tf.data.TFRecordDataset(path_list_dict['test'], num_parallel_reads=AUTO)
-        .map(read_tfrecord, num_parallel_calls=AUTO)
-        .batch(len(path_list_dict['test']), drop_remainder=True)
-    )
+def get_test_dataset(path_list_dict, focal_loss=False):
+    if focal_loss:
+        dataset = (
+            tf.data.TFRecordDataset(path_list_dict['test'], num_parallel_reads=AUTO)
+                .map(read_tfrecord_focal_loss, num_parallel_calls=AUTO)
+                .batch(len(path_list_dict['test']), drop_remainder=True)
+        )
+    else:
+        dataset = (
+            tf.data.TFRecordDataset(path_list_dict['test'], num_parallel_reads=AUTO)
+            .map(read_tfrecord, num_parallel_calls=AUTO)
+            .batch(len(path_list_dict['test']), drop_remainder=True)
+        )
     return dataset
 
 
-def get_test_ready(path_list_dict):
-    testdata = get_test_dataset(path_list_dict)
+def get_test_ready(path_list_dict, focal_loss=False):
+    testdata = get_test_dataset(path_list_dict, focal_loss=focal_loss)
     test_x, test_y = next(iter(testdata))
     return test_x, test_y
 

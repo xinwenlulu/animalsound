@@ -205,7 +205,7 @@ def count_label(multilabels):
     return np.array(numlabels)
 
 
-def read_ann(path, nontarget_moved = False, verbose = False, plot = False):
+def read_ann(path, nontarget_moved=False, verbose=False, plot = False):
     x = []
     y_labels = []
     for line in open(path):
@@ -246,7 +246,7 @@ def plot_calls(numlabels):
     ax1.boxplot(numlabels)
 
 
-def move_nontarget_to_negatives(ann, nann, over3flist, verbose = False):
+def move_nontarget_to_negatives(ann, nann, over3flist, verbose=False):
     sample_non_target = np.array(['0'] * len(over3flist))
     non_target = []
     for i, a in enumerate(ann):
@@ -257,8 +257,8 @@ def move_nontarget_to_negatives(ann, nann, over3flist, verbose = False):
     ann = np.delete(ann, non_target, 0)
     np.savetxt('positive_multilabel.txt', ann, fmt='%s')
     np.savetxt('negatives_multilabel.txt', nann, fmt='%s')
-    ann = read_ann("positive_multilabel.txt", True, verbose = verbose)
-    nann = read_ann("negatives_multilabel.txt", True, verbose = verbose)
+    ann = read_ann("positive_multilabel.txt", True, verbose=verbose)
+    nann = read_ann("negatives_multilabel.txt", True, verbose=verbose)
     return ann, nann
 
 
@@ -271,6 +271,6 @@ def make_ann(clip_length, over3flist, file, start, end, y_labels, move_nontarget
     ann = read_ann("positive_multilabel.txt", verbose=verbose)
     nann = read_ann("negatives_multilabel.txt", verbose=verbose)
     if move_nontarget:
-        ann, nann = move_nontarget_to_negatives(ann, nann, over3flist, verbose = verbose)
+        ann, nann = move_nontarget_to_negatives(ann, nann, over3flist, verbose=verbose)
     return ann, nann
 
