@@ -6,7 +6,7 @@ from metrics import my_focal_loss
 from keras import backend as K
 from common.models.embedding_pooling import AttentionGlobalPooling
 from keras.callbacks import EarlyStopping, ModelCheckpoint
-from keras.layers import Dense, Conv2D,  MaxPool2D, Flatten, GlobalAveragePooling2D,  \
+from keras.layers import Dense, Conv2D, MaxPool2D, Flatten, GlobalAveragePooling2D, \
     BatchNormalization, Add, multiply, MultiHeadAttention, MaxPooling2D, GRU, Reshape, \
     GlobalAveragePooling1D, Input
 from keras.models import Sequential
@@ -24,7 +24,6 @@ def binarise(prediction):
 def initialiseModel(learning_rate, model, f1_m, precision_m, recall_m,
                     partition_size_dict, path_list_dict, patience, epochs,
                     augmentation=None, timemask=24):
-
     model.summary()
 
     opt = tf.optimizers.Adam(learning_rate=learning_rate)
@@ -69,8 +68,8 @@ def initialiseModel(learning_rate, model, f1_m, precision_m, recall_m,
 
 def addAttention(model):
     attention = AttentionGlobalPooling(number_of_heads=4, use_temporal_std=False, pool_heads="attention",
-                           auto_pooling="no_auto", number_of_features=992, sequence_length=128,
-                           use_auto_array=False, outputs_list=(30,))
+                                       auto_pooling="no_auto", number_of_features=992, sequence_length=128,
+                                       use_auto_array=False, outputs_list=(30,))
     model.add(attention)
     return model
 
@@ -97,7 +96,6 @@ def addCNNlayers(model, filters, denselayers, activations, RNNlayers=None):
 def createCNN(learning_rate, f1_m, precision_m, recall_m, path_list_dict,
               partition_size_dict, epochs, patience, filters=[32, 64, 128],
               activations=['relu', 'relu'], denselayers=[], augmentation=False, timemask=24):
-
     model = tf.keras.Sequential()
     model = addCNNlayers(model, filters, denselayers, activations)
     model.add(Dense(30, 'sigmoid'))
@@ -108,9 +106,8 @@ def createCNN(learning_rate, f1_m, precision_m, recall_m, path_list_dict,
 
 
 def CNNwithFocalLoss(learning_rate, f1_m, precision_m, recall_m, path_list_dict,
-              partition_size_dict, epochs, patience, filters=[32, 64, 128],
-              activations=['relu', 'relu'], denselayers=[], augmentation=False, timemask=24):
-
+                     partition_size_dict, epochs, patience, filters=[32, 64, 128],
+                     activations=['relu', 'relu'], denselayers=[], augmentation=False, timemask=24):
     model = Sequential()
     model = addCNNlayers(model, filters, denselayers, activations)
     model.add(Dense(30, 'sigmoid'))
@@ -143,7 +140,7 @@ def CNNwithFocalLoss(learning_rate, f1_m, precision_m, recall_m, path_list_dict,
                             steps_per_epoch=steps_per_epoch,
                             epochs=epochs,
                             callbacks=my_callbacks,
-                            validation_data=get_validation_dataset(path_list_dict,focal_loss=True),
+                            validation_data=get_validation_dataset(path_list_dict, focal_loss=True),
                             validation_steps=validation_steps)
         model.load_weights(checkpoint_filepath)
         return model, history
@@ -158,12 +155,10 @@ def CNNwithFocalLoss(learning_rate, f1_m, precision_m, recall_m, path_list_dict,
     return model, history
 
 
-
 def createCRNN(learning_rate, f1_m, precision_m, recall_m, path_list_dict,
-              partition_size_dict, epochs, patience, filters=[32, 64, 128],
-              activations=['relu', 'relu'], denselayers=[], RNNlayers=[128],
+               partition_size_dict, epochs, patience, filters=[32, 64, 128],
+               activations=['relu', 'relu'], denselayers=[], RNNlayers=[128],
                augmentation=False, timemask=24):
-
     model = Sequential()
     model = addCNNlayers(model, filters, denselayers, activations, RNNlayers=RNNlayers)
     model.add(Dense(30, 'sigmoid'))
@@ -174,9 +169,8 @@ def createCRNN(learning_rate, f1_m, precision_m, recall_m, path_list_dict,
 
 
 def createAttentionModel(learning_rate, f1_m, precision_m, recall_m, path_list_dict,
-              partition_size_dict, epochs, patience, filters=[32, 64, 128],
-              activations=['relu', 'relu'], augmentation=False, timemask=24):
-
+                         partition_size_dict, epochs, patience, filters=[32, 64, 128],
+                         activations=['relu', 'relu'], augmentation=False, timemask=24):
     input = Input(shape=[500, 128, 1])
     cnn1 = Conv2D(filters[0], kernel_size=(3, 3), padding='same', activation=activations[0])(input)
     maxpool1 = MaxPooling2D(pool_size=(2, 2))(cnn1)
@@ -184,11 +178,11 @@ def createAttentionModel(learning_rate, f1_m, precision_m, recall_m, path_list_d
     maxpool2 = MaxPooling2D(pool_size=(2, 2))(cnn2)
     cnn3 = Conv2D(filters[2], kernel_size=(3, 3), padding='same', activation=activations[0])(maxpool2)
     maxpool3 = MaxPooling2D(pool_size=(2, 2))(cnn3)
-    #reshape = Reshape((62, 16*128))(maxpool3)
+    # reshape = Reshape((62, 16*128))(maxpool3)
     attention = MultiHeadAttention(num_heads=4, key_dim=2, attention_axes=1)(maxpool3, maxpool3)
-    #attention = AttentionGlobalPooling(number_of_heads=4, use_temporal_std=False, pool_heads="attention",
-                                       #auto_pooling="no_auto", number_of_features=992, sequence_length=128,
-                                       #use_auto_array=False, outputs_list=(30,))(reshape)
+    # attention = AttentionGlobalPooling(number_of_heads=4, use_temporal_std=False, pool_heads="attention",
+    # auto_pooling="no_auto", number_of_features=992, sequence_length=128,
+    # use_auto_array=False, outputs_list=(30,))(reshape)
     avgpool = GlobalAveragePooling2D()(attention)
     output = Dense(30, 'sigmoid')(avgpool)
     model = Model(inputs=input, outputs=output)
@@ -301,8 +295,53 @@ class SEResNet18(Model):
         return out
 
 
+class RandomPrediction(Model):
+
+    def __init__(self, **kwargs):
+        """
+            num_classes: number of classes in specific classification task.
+        """
+        super().__init__(**kwargs)
+
+    def call(self, inputs):
+        if inputs.shape[0] is not None:
+            out = tf.random.uniform(shape=(inputs.shape[0], 30), minval=0, maxval=1, dtype=tf.dtypes.float32)
+            return out
+        return tf.random.uniform(shape=(30,), minval=0, maxval=1, dtype=tf.dtypes.float32)
+
+    def predict(self, inputs):
+        print(inputs.shape)
+        if inputs.shape[0] is not None:
+            out = tf.random.uniform(shape=(inputs.shape[0], 30), minval=0, maxval=1, dtype=tf.dtypes.float32)
+            return out
+        return tf.random.uniform(shape=(30,), minval=0, maxval=1, dtype=tf.dtypes.float32)
+
+
+class MajorityPrediction(Model):
+
+    def __init__(self, **kwargs):
+        """
+            num_classes: number of classes in specific classification task.
+        """
+        super().__init__(**kwargs)
+
+    def call(self, inputs):
+        out = tf.constant([0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                          dtype=tf.float32)
+        if inputs.shape[0] is not None:
+            out = tf.repeat([out], repeats=inputs.shape[0], axis=0)
+        return out
+
+    def predict(self, inputs):
+        out = tf.constant([0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                          dtype=tf.float32)
+        if inputs.shape[0] is not None:
+            out = tf.repeat([out], repeats=inputs.shape[0], axis=0)
+        return out
+
+
 def createSEResNet18(learning_rate, f1_m, precision_m, recall_m, path_list_dict,
-              partition_size_dict, epochs, patience, augmentation=False, timemask=24, se=False):
+                     partition_size_dict, epochs, patience, augmentation=False, timemask=24, se=False):
     model = SEResNet18(30, se=se)
     model.build(input_shape=(None, 500, 128, 1))
     return initialiseModel(learning_rate, model, f1_m, precision_m, recall_m,
@@ -310,10 +349,25 @@ def createSEResNet18(learning_rate, f1_m, precision_m, recall_m, path_list_dict,
                            augmentation=augmentation, timemask=timemask)
 
 
+def createRandomMajority(learning_rate, f1_m, precision_m, recall_m, type='Random'):
+    if type == 'Random':
+        model = RandomPrediction()
+    else:
+        model = MajorityPrediction()
+
+    opt = tf.optimizers.Adam(learning_rate=learning_rate)
+    model.compile(optimizer=opt,
+                  loss='binary_crossentropy',
+                  metrics=['accuracy', f1_m, precision_m, recall_m])
+
+    return model
+
+
 
 def evaluate_on_test(model, path_list_dict, focal_loss=False):
     test_x, test_y = get_test_ready(path_list_dict, focal_loss=focal_loss)
     predict_y = model.predict(test_x)
+    print(predict_y.shape)
     bool_predict = binarise(predict_y)
     score = model.evaluate(x=test_x, y=test_y, verbose=1)
     return score, test_y, bool_predict

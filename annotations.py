@@ -127,7 +127,6 @@ def clip_anns(target, files, starts, ends, labels, clip_length, random_generator
 
         if files[i] != f or i == len(labels) - 2:
 
-            shortcalls = []
             longcalls = []
             longlabel = []
             tmpann = []
@@ -147,7 +146,6 @@ def clip_anns(target, files, starts, ends, labels, clip_length, random_generator
                     encode_label = make_label(target, species_present)
                     if not included(call, encode_label, tmpann):
                         tmpann.append([thisann, encode_label])
-                    shortcalls.append(interval([call[0][0], call[0][1]]))
                 else:  # longcalls
                     longcalls.append(interval([call[0][0], call[0][1]]))
                     longlabel.append(calllabel[j])
