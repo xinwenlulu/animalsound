@@ -144,42 +144,42 @@ def segmentcalls_fileindependent(unclipped_folder, clipped_folder, anns, target,
         end_times = end[anns[:, 0] == str(wav_name)]
         species = labels[anns[:, 0] == str(wav_name)]
 
-        species_inclip = np.array([])
+        species_infile = np.array([])
         for ic in range(species.shape[0]):
-            species_inclip = np.append(species_inclip, get_species(species[ic], target))
-        species_inclip = np.unique(species_inclip)
+            species_infile = np.append(species_infile, get_species(species[ic], target))
+        species_infile = np.unique(species_infile)
 
         for s in sorted_species:
-            if s in species_inclip:
+            if s in species_infile:
                 if len(train) > 0 and s not in train:
-                    train = np.append(train, species_inclip)
-                    trfile = np.append(trfile, [wav_name] * len(species_inclip))
+                    train = np.append(train, species_infile)
+                    trfile = np.append(trfile, [wav_name] * len(species_infile))
                     trainnum += len(end_times)
                     partition = 'train'
                 elif len(test) > 0 and s not in test:
-                    test = np.append(test, species_inclip)
-                    tefile = np.append(tefile, [wav_name] * len(species_inclip))
+                    test = np.append(test, species_infile)
+                    tefile = np.append(tefile, [wav_name] * len(species_infile))
                     testnum += len(end_times)
                     partition = 'test'
                 elif len(dev) > 0 and s not in dev:
-                    dev = np.append(dev, species_inclip)
-                    dfile = np.append(dfile, [wav_name] * len(species_inclip))
+                    dev = np.append(dev, species_infile)
+                    dfile = np.append(dfile, [wav_name] * len(species_infile))
                     devnum += len(end_times)
                     partition = 'devel'
                 else:
                     if len(train) == 0:
-                        train = np.append(train, species_inclip)
-                        trfile = np.append(trfile, [wav_name] * len(species_inclip))
+                        train = np.append(train, species_infile)
+                        trfile = np.append(trfile, [wav_name] * len(species_infile))
                         trainnum += len(end_times)
                         partition = 'train'
                     elif len(test) == 0:
-                        test = np.append(test, species_inclip)
-                        tefile = np.append(tefile, [wav_name] * len(species_inclip))
+                        test = np.append(test, species_infile)
+                        tefile = np.append(tefile, [wav_name] * len(species_infile))
                         testnum += len(end_times)
                         partition = 'test'
                     elif len(dev) == 0:
-                        dev = np.append(dev, species_inclip)
-                        dfile = np.append(dfile, [wav_name] * len(species_inclip))
+                        dev = np.append(dev, species_infile)
+                        dfile = np.append(dfile, [wav_name] * len(species_infile))
                         devnum += len(end_times)
                         partition = 'devel'
                     else:
@@ -188,16 +188,16 @@ def segmentcalls_fileindependent(unclipped_folder, clipped_folder, anns, target,
                         # check which partition needs more data
                         partition = decide_partition(trainnum, devnum, testnum, len(anns))
                         if partition == 'train':
-                            train = np.append(train, species_inclip)
-                            trfile = np.append(trfile, [wav_name] * len(species_inclip))
+                            train = np.append(train, species_infile)
+                            trfile = np.append(trfile, [wav_name] * len(species_infile))
                             trainnum += len(end_times)
                         elif partition == 'devel':
-                            dev = np.append(dev, species_inclip)
-                            dfile = np.append(dfile, [wav_name] * len(species_inclip))
+                            dev = np.append(dev, species_infile)
+                            dfile = np.append(dfile, [wav_name] * len(species_infile))
                             devnum += len(end_times)
                         else:
-                            test = np.append(test, species_inclip)
-                            tefile = np.append(tefile, [wav_name] * len(species_inclip))
+                            test = np.append(test, species_infile)
+                            tefile = np.append(tefile, [wav_name] * len(species_infile))
                             testnum += len(end_times)
                 break
 

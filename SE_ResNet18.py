@@ -17,7 +17,6 @@ se = [False, True]
 
 path_list_dict, partition_size_dict = get_dataset_info(TFRECORDS_FOLDER)
 print(partition_size_dict)
-index = 0
 for n, s in zip(modelname, se):
     name = n
     for i in range(num_trials):
